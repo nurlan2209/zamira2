@@ -4,6 +4,9 @@ import HomePage from "./components/HomePage";
 import CatalogPage from "./components/CatalogPage";
 import ProductPage from "./components/ProductPage";
 import PaymentPage from "./components/PaymentPage";
+import CheckoutPage from "./components/CheckoutPage";
+import ProfilePage from "./components/ProfilePage";
+import AdminPage from "./components/AdminPage";
 import Modal from "./components/Modal";
 import { isAuthenticated, getCurrentUser, logout } from "./services/auth";
 
@@ -61,7 +64,7 @@ function App() {
 
   // Если данные пользователя еще загружаются, можно показать спиннер или заглушку
   if (loading) {
-    return <div>Загрузка...</div>;
+    return <div className="loading-overlay">Загрузка...</div>;
   }
 
   return (
@@ -103,6 +106,35 @@ function App() {
             <PaymentPage 
               user={user} 
               openModal={openModal} 
+              onLogout={handleLogout} 
+            />
+          } 
+        />
+        <Route 
+          path="/checkout" 
+          element={
+            <CheckoutPage 
+              user={user} 
+              openModal={openModal} 
+              onLogout={handleLogout} 
+            />
+          } 
+        />
+        <Route 
+          path="/profile" 
+          element={
+            <ProfilePage 
+              user={user} 
+              openModal={openModal} 
+              onLogout={handleLogout} 
+            />
+          } 
+        />
+        <Route 
+          path="/admin" 
+          element={
+            <AdminPage 
+              user={user} 
               onLogout={handleLogout} 
             />
           } 

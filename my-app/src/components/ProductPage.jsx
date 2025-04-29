@@ -44,8 +44,8 @@ export default function ProductPage({ user, openModal, onLogout }) {
       return;
     }
     
-    // Переход на страницу оплаты с передачей товара и выбранного размера
-    navigate("/payment", { state: { product, selectedSize } });
+    // Переход на страницу оформления заказа вместо сразу на страницу оплаты
+    navigate("/checkout", { state: { product, selectedSize } });
   };
 
   return (
@@ -60,7 +60,7 @@ export default function ProductPage({ user, openModal, onLogout }) {
           <div className="auth-panel">
             {user ? (
               <div className="user-info">
-                <span className="username">Привет, {user.username}!</span>
+                <Link to="/profile" className="username">Привет, {user.username}!</Link>
                 <button onClick={onLogout} className="logout-btn">Выйти</button>
               </div>
             ) : (

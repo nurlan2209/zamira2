@@ -1129,4 +1129,75 @@ img:hover {
   text-align: center;
 }
 
+/* Дополнительные стили для кнопок профиля и админ-панели */
 
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.profile-button, .admin-button {
+  background-color: transparent;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.profile-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: #ffffff;
+}
+
+.admin-button {
+  background-color: #e74c3c;
+  border-color: #e74c3c;
+}
+
+.admin-button:hover {
+  background-color: #c0392b;
+  border-color: #c0392b;
+}
+
+/* Стили для индикатора загрузки на всю страницу */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+  color: #333;
+  z-index: 9999;
+}
+
+/* Стили для заглушки формы оплаты QR-кодом */
+.qr-payment-placeholder {
+  max-width: 300px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.qr-payment-placeholder img {
+  max-width: 100%;
+  height: auto;
+  margin-bottom: 15px;
+}
+
+.qr-payment-placeholder p {
+  margin-bottom: 15px;
+  color: #666;
+}

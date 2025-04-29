@@ -142,7 +142,14 @@ export default function HomePage({ openModal: handleOpenModal, user, onLogout })
             <div className="auth-buttons">
               {user ? (
                 <div className="user-menu">
-                  <span className="username">Здравствуйте, {user.username}</span>
+                  <Link to="/profile" className="profile-button">
+                    {user.username}
+                  </Link>
+                  {user.is_admin && (
+                    <Link to="/admin" className="admin-button">
+                      Админ-панель
+                    </Link>
+                  )}
                   <button className="logout-button" onClick={onLogout}>
                     Выйти
                   </button>

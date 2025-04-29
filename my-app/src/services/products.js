@@ -54,3 +54,88 @@ export const getProduct = async (productId) => {
     throw error;
   }
 };
+
+// Функция для создания нового продукта (только для админов)
+export const createProduct = async (productData) => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("Требуется авторизация");
+    }
+
+    const response = await fetch(`${API_URL}/admin/products`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(productData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || "Ошибка при создании товара");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Ошибка при создании товара:", error);
+    throw error;
+  }
+};
+
+// Функция для обновления продукта (только для админов)
+export const updateProduct = async (productId, productData) => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("Требуется авторизация");
+    }
+
+    const response = await fetch(`${API_URL}/admin/products/${productId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(productData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || "Ошибка при обновлении товара");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Ошибка при обновлении товара:", error);
+    throw error;
+  }
+};
+
+// Функция для удаления продукта (только для админов)
+export const deleteProduct = async (productId) => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("Требуется авторизация");
+    }
+
+    const response = await fetch(`${API_URL}/admin/products/${productId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || "Ошибка при удалении товара");
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Ошибка при удалении товара:", error);
+    throw error;
+  }
+};
