@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import "../styles/CheckoutPage.css";
-import { createOrder } from "../services/orders";
+import { createOrder, completeOrder } from "../services/orders";
 
 export default function CheckoutPage({ user, openModal, onLogout }) {
   const location = useLocation();
@@ -67,7 +67,7 @@ export default function CheckoutPage({ user, openModal, onLogout }) {
         throw new Error("Для выбранного способа доставки необходимо указать адрес");
       }
       
-      // Формируем данные заказа
+      // Формируем данные заказа для API
       const orderData = {
         items: [
           {
@@ -76,6 +76,9 @@ export default function CheckoutPage({ user, openModal, onLogout }) {
             quantity: 1
           }
         ],
+        // Дополнительные поля для сохранения информации о доставке
+        // Эти поля можно передать в метаданных, если API их поддерживает
+        // Или добавить в БД соответствующие поля
         delivery_method: deliveryMethod,
         delivery_address: address,
         contact_info: {
@@ -86,11 +89,9 @@ export default function CheckoutPage({ user, openModal, onLogout }) {
         }
       };
       
-      // В реальном приложении здесь был бы запрос к API
-      // const response = await createOrder(orderData);
-      
-      // Имитируем успешное создание заказа
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Создаем предварительный заказ через API
+      const response = await createOrder(orderData);
+      console.log("Заказ успешно создан:", response);
       
       // Показываем QR-код для оплаты
       setShowQRModal(true);
@@ -103,15 +104,50 @@ export default function CheckoutPage({ user, openModal, onLogout }) {
     }
   };
 
-  const handlePaymentComplete = () => {
-    // Закрываем модальное окно с QR-кодом
-    setShowQRModal(false);
-    // Показываем сообщение об успешном оформлении заказа
-    setOrderCompleted(true);
+  const handlePaymentComplete = async () => {
+    try {
+      // Имитируем обработку оплаты
+      setLoading(true);
+      
+      // Формируем данные заказа для завершения
+      const orderData = {
+        product: product,
+        selectedSize: selectedSize,
+        delivery_method: deliveryMethod,
+        delivery_address: address,
+        contact_info: {
+          first_name: firstName,
+          last_name: lastName,
+          email: email,
+          phone: phoneNumber
+        }
+      };
+      
+      // Сохраняем заказ в системе
+      const completedOrder = await completeOrder(orderData);
+      console.log("Заказ успешно оплачен и сохранен:", completedOrder);
+      
+      // Закрываем модальное окно с QR-кодом
+      setShowQRModal(false);
+      // Показываем сообщение об успешном оформлении заказа
+      setOrderCompleted(true);
+      
+    } catch (err) {
+      setError("Ошибка при обработке оплаты: " + err.message);
+      console.error("Ошибка при обработке оплаты:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGoHome = () => {
     navigate("/");
+  };
+
+  const handleGoToOrders = () => {
+    navigate("/profile");
+    // Переключаемся на вкладку заказов в профиле
+    localStorage.setItem('activeProfileTab', 'orders');
   };
 
   // Если нет товара или пользователя, показываем загрузку (пока не сработает редирект)
@@ -139,9 +175,14 @@ export default function CheckoutPage({ user, openModal, onLogout }) {
         <div className="order-success">
           <h2>Заказ успешно оформлен!</h2>
           <p>Спасибо за покупку в нашем магазине. Детали заказа отправлены на ваш email.</p>
-          <button onClick={handleGoHome} className="go-home-button">
-            Вернуться в магазин
-          </button>
+          <div className="success-actions">
+            <button onClick={handleGoToOrders} className="view-orders-button">
+              Перейти к моим заказам
+            </button>
+            <button onClick={handleGoHome} className="go-home-button">
+              Вернуться в магазин
+            </button>
+          </div>
         </div>
       ) : (
         <>

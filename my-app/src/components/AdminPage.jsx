@@ -1,8 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../styles/AdminPage.css";
-import { getUsers, deleteUser } from "../services/admin";
-import { getProducts, deleteProduct, getCategories } from "../services/products";
+import { 
+  getUsers, 
+  deleteUser, 
+  createUser, 
+  updateUser 
+} from "../services/admin";
+import { 
+  getProducts, 
+  deleteProduct, 
+  getCategories,
+  createProduct,
+  updateProduct,
+  createCategory
+} from "../services/products";
 import ProductForm from "./admin/ProductForm";
 import UserForm from "./admin/UserForm";
 
@@ -123,11 +135,53 @@ export default function AdminPage({ user, onLogout }) {
       setLoading(true);
       
       if (activeTab === "products") {
+        // Проверяем, есть ли новая категория
+        let categoryId = formData.category_id;
+        
+        // Если указана новая категория, создаем ее
+        if (formData.new_category) {
+          console.log("Создание новой категории:", formData.new_category);
+          const categoryData = {
+            name: formData.new_category
+          };
+          
+          const newCategory = await createCategory(categoryData);
+          categoryId = newCategory.id;
+          
+          // Обновляем список категорий
+          await fetchCategories();
+        }
+        
+        // Обновляем данные товара с полученным/указанным ID категории
+        const productData = {
+          ...formData,
+          category_id: categoryId
+        };
+        
+        // Удаляем поле новой категории из данных товара
+        delete productData.new_category;
+        delete productData.category_name;
+        
         // Обработка формы товара
+        if (formData.id) {
+          // Если есть ID, значит это редактирование существующего товара
+          await updateProduct(formData.id, productData);
+        } else {
+          // Иначе это создание нового товара
+          await createProduct(productData);
+        }
+        
         // Обновляем список товаров после успешного добавления/редактирования
         await fetchProducts();
       } else if (activeTab === "users") {
         // Обработка формы пользователя
+        if (formData.id) {
+          // Если есть ID, значит это редактирование существующего пользователя
+          await updateUser(formData.id, formData);
+        } else {
+          // Иначе это создание нового пользователя
+          await createUser(formData);
+        }
         // Обновляем список пользователей после успешного добавления/редактирования
         await fetchUsers();
       }
@@ -136,7 +190,7 @@ export default function AdminPage({ user, onLogout }) {
       setEditItem(null);
       setError(null);
     } catch (err) {
-      setError(`Не удалось ${editItem ? 'обновить' : 'добавить'} ${activeTab === "products" ? 'товар' : 'пользователя'}. Пожалуйста, попробуйте позже.`);
+      setError(`Не удалось ${editItem ? 'обновить' : 'добавить'} ${activeTab === "products" ? 'товар' : 'пользователя'}. ${err.message}`);
       console.error(`Ошибка при ${editItem ? 'обновлении' : 'добавлении'}:`, err);
     } finally {
       setLoading(false);

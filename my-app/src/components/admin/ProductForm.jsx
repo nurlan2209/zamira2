@@ -9,6 +9,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
     description: "",
     image_url: "",
     category_id: "",
+    category_name: "", // Новое поле для ввода названия категории
     sizes: []
   });
   const [categories, setCategories] = useState([]);
@@ -18,6 +19,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
     "XS", "S", "M", "L", "XL", "XXL", "XXXL", 
     "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45"
   ]);
+  const [useExistingCategory, setUseExistingCategory] = useState(true);
 
   // Загружаем категории при монтировании компонента
   useEffect(() => {
@@ -32,6 +34,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
         description: product.description || "",
         image_url: product.image_url,
         category_id: product.category_id,
+        category_name: product.category?.name || "",
         sizes: product.sizes ? product.sizes.map(size => size.size) : []
       });
     }
@@ -81,11 +84,21 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
     }
   };
 
+  const toggleCategoryInputMode = () => {
+    setUseExistingCategory(!useExistingCategory);
+    // Сбрасываем значения связанных полей
+    setFormData({
+      ...formData,
+      category_id: "",
+      category_name: ""
+    });
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     
     // Проверяем обязательные поля
-    if (!formData.name || !formData.price || !formData.image_url || !formData.category_id) {
+    if (!formData.name || !formData.price || !formData.image_url) {
       setError("Пожалуйста, заполните все обязательные поля");
       return;
     }
@@ -96,11 +109,31 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
       return;
     }
     
+    // Проверяем, что указана категория (либо выбрана из списка, либо введена вручную)
+    if (useExistingCategory && !formData.category_id) {
+      setError("Пожалуйста, выберите категорию");
+      return;
+    }
+    
+    if (!useExistingCategory && !formData.category_name) {
+      setError("Пожалуйста, введите название категории");
+      return;
+    }
+    
     // Преобразуем цену в число перед отправкой
     const processedData = {
       ...formData,
       price: parseFloat(formData.price)
     };
+    
+    // Если введена новая категория, добавляем специальное поле new_category
+    if (!useExistingCategory) {
+      processedData.new_category = formData.category_name;
+      delete processedData.category_id; // Удаляем ID категории, так как создаем новую
+    } else {
+      delete processedData.new_category;
+      delete processedData.category_name;
+    }
     
     onSubmit(processedData);
   };
@@ -170,21 +203,49 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
         </div>
         
         <div className="form-group">
-          <label htmlFor="category_id">Категория *</label>
-          <select
-            id="category_id"
-            name="category_id"
-            value={formData.category_id}
-            onChange={handleInputChange}
-            required
-          >
-            <option value="">Выберите категорию</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
+          <div className="category-toggle">
+            <label>
+              <input
+                type="checkbox"
+                checked={useExistingCategory}
+                onChange={toggleCategoryInputMode}
+              />
+              Использовать существующую категорию
+            </label>
+          </div>
+          
+          {useExistingCategory ? (
+            <>
+              <label htmlFor="category_id">Выберите категорию *</label>
+              <select
+                id="category_id"
+                name="category_id"
+                value={formData.category_id}
+                onChange={handleInputChange}
+                required={useExistingCategory}
+              >
+                <option value="">Выберите категорию</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </>
+          ) : (
+            <>
+              <label htmlFor="category_name">Название новой категории *</label>
+              <input
+                type="text"
+                id="category_name"
+                name="category_name"
+                value={formData.category_name}
+                onChange={handleInputChange}
+                placeholder="Введите название новой категории"
+                required={!useExistingCategory}
+              />
+            </>
+          )}
         </div>
         
         <div className="form-group">

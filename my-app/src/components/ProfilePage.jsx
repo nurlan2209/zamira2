@@ -37,10 +37,15 @@ export default function ProfilePage({ user, onLogout, openModal }) {
       phone: user.phone || ""
     });
 
-    console.log("Данные пользователя загружены:", user);
+    // Проверяем, был ли запрос на переход к заказам
+    const savedTab = localStorage.getItem('activeProfileTab');
+    if (savedTab) {
+      setActiveTab(savedTab);
+      localStorage.removeItem('activeProfileTab'); // Удаляем параметр после использования
+    }
 
-    // Загружаем заказы пользователя
-    if (activeTab === "orders") {
+    // Загружаем заказы пользователя если активна вкладка заказов
+    if (activeTab === "orders" || savedTab === "orders") {
       fetchOrders();
     }
   }, [user, activeTab, navigate, openModal]);
@@ -133,6 +138,100 @@ export default function ProfilePage({ user, onLogout, openModal }) {
   if (!user) {
     return <div className="loading">Загрузка...</div>;
   }
+
+  // Функция для безопасного отображения данных заказа
+  const safeRenderOrderItem = (item) => {
+    return (
+      <div key={item.id || Math.random()} className="order-item">
+        {/* Проверяем наличие объекта product и его свойств */}
+        <div className="item-image-container">
+          {item.product && item.product.image_url ? (
+            <img 
+              src={item.product.image_url} 
+              alt={item.product.name || 'Товар'} 
+              className="item-image"
+            />
+          ) : (
+            <div className="placeholder-image">Нет изображения</div>
+          )}
+        </div>
+
+        <div className="item-details">
+          <h4>
+            {item.product && item.product.name 
+              ? item.product.name 
+              : 'Информация о товаре недоступна'}
+          </h4>
+          <p>Размер: {item.size || 'Не указан'}</p>
+          <p>Количество: {item.quantity || 1}</p>
+          {item.product && item.product.price !== undefined && (
+            <p className="item-price">
+              ${typeof item.product.price === 'number' 
+                ? item.product.price.toFixed(2) 
+                : item.product.price}
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Функция для безопасного отображения заказов
+  const renderOrders = () => {
+    if (!orders || orders.length === 0) {
+      return (
+        <div className="no-orders">
+          <p>У вас пока нет заказов.</p>
+          <Link to="/" className="shop-link">
+            Перейти к покупкам
+          </Link>
+        </div>
+      );
+    }
+
+    return (
+      <div className="orders-list">
+        {orders.map(order => {
+          // Безопасно обрабатываем каждый заказ
+          return (
+            <div key={order.id || Math.random()} className="order-card">
+              <div className="order-header">
+                <h3>Заказ #{order.id || 'Новый'}</h3>
+                <span className={`order-status ${order.status || 'pending'}`}>
+                  {order.status === "pending" ? "В обработке" :
+                   order.status === "completed" ? "Выполнен" :
+                   order.status === "shipped" ? "Отправлен" : 
+                   order.status || "В обработке"}
+                </span>
+              </div>
+              
+              <p className="order-date">
+                Дата заказа: {order.created_at 
+                  ? new Date(order.created_at).toLocaleDateString() 
+                  : new Date().toLocaleDateString()}
+              </p>
+              
+              <div className="order-items">
+                {Array.isArray(order.items) 
+                  ? order.items.map(item => safeRenderOrderItem(item))
+                  : <p>Детали заказа недоступны</p>
+                }
+              </div>
+              
+              <div className="order-total">
+                <h4>Итого: ${order.total_price 
+                  ? (typeof order.total_price === 'number' 
+                      ? order.total_price.toFixed(2) 
+                      : order.total_price)
+                  : '0.00'}
+                </h4>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
 
   return (
     <div className="profile-page">
@@ -273,53 +372,8 @@ export default function ProfilePage({ user, onLogout, openModal }) {
               
               {loading ? (
                 <div className="loading">Загрузка заказов...</div>
-              ) : orders.length > 0 ? (
-                <div className="orders-list">
-                  {orders.map((order) => (
-                    <div key={order.id} className="order-card">
-                      <div className="order-header">
-                        <h3>Заказ #{order.id}</h3>
-                        <span className={`order-status ${order.status}`}>
-                          {order.status === "pending" ? "В обработке" :
-                           order.status === "completed" ? "Выполнен" :
-                           order.status === "shipped" ? "Отправлен" : order.status}
-                        </span>
-                      </div>
-                      <p className="order-date">
-                        Дата заказа: {new Date(order.created_at).toLocaleDateString()}
-                      </p>
-                      
-                      <div className="order-items">
-                        {order.items.map((item) => (
-                          <div key={item.id} className="order-item">
-                            <img 
-                              src={item.product.image_url} 
-                              alt={item.product.name} 
-                              className="item-image"
-                            />
-                            <div className="item-details">
-                              <h4>{item.product.name}</h4>
-                              <p>Размер: {item.size}</p>
-                              <p>Количество: {item.quantity}</p>
-                              <p className="item-price">${item.product.price}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      
-                      <div className="order-total">
-                        <h4>Итого: ${order.total_price}</h4>
-                      </div>
-                    </div>
-                  ))}
-                </div>
               ) : (
-                <div className="no-orders">
-                  <p>У вас пока нет заказов.</p>
-                  <Link to="/" className="shop-link">
-                    Перейти к покупкам
-                  </Link>
-                </div>
+                renderOrders()
               )}
             </div>
           )}

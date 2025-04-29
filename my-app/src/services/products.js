@@ -139,3 +139,32 @@ export const deleteProduct = async (productId) => {
     throw error;
   }
 };
+
+// Функция для создания новой категории
+export const createCategory = async (categoryData) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("Требуется авторизация");
+      }
+  
+      const response = await fetch(`${API_URL}/admin/categories`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(categoryData),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Ошибка при создании категории");
+      }
+  
+      return await response.json();
+    } catch (error) {
+      console.error("Ошибка при создании категории:", error);
+      throw error;
+    }
+  };

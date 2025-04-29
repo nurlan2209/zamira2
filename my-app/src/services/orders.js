@@ -3,28 +3,28 @@ const API_URL = "http://localhost:8000/api";
 
 // Функция для получения всех заказов пользователя
 export const getUserOrders = async () => {
-  try {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      throw new Error("Требуется авторизация");
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("Требуется авторизация");
+      }
+  
+      const response = await fetch(`${API_URL}/orders`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error("Ошибка при получении заказов");
+      }
+  
+      return await response.json();
+    } catch (error) {
+      console.error("Ошибка при получении заказов:", error);
+      throw error;
     }
-
-    const response = await fetch(`${API_URL}/orders`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error("Ошибка при получении заказов");
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error("Ошибка при получении заказов:", error);
-    throw error;
-  }
-};
+  };
 
 // Функция для получения конкретного заказа по ID
 export const getOrder = async (orderId) => {
@@ -130,3 +130,47 @@ export const cancelOrder = async (orderId) => {
     throw error;
   }
 };
+
+// Функция для завершения и сохранения заказа после оплаты
+export const completeOrder = async (orderData) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("Требуется авторизация");
+      }
+  
+      // Формирование данных заказа для API
+      const apiOrderData = {
+        items: [
+          {
+            product_id: orderData.product.id,
+            size: orderData.selectedSize,
+            quantity: 1
+          }
+        ]
+      };
+  
+      // Создаем заказ через API
+      const response = await fetch(`${API_URL}/orders`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(apiOrderData),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Ошибка при создании заказа");
+      }
+  
+      // Получаем созданный заказ
+      const createdOrder = await response.json();
+      
+      return createdOrder;
+    } catch (error) {
+      console.error("Ошибка при сохранении заказа:", error);
+      throw error;
+    }
+  };
