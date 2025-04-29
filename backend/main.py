@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.database import engine, Base
-from backend.routers import auth, products, users
+from backend.routers import auth, products, users, orders, admin
 
 # Создаем таблицы в базе данных
 Base.metadata.create_all(bind=engine)
@@ -30,6 +30,8 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api")
 app.include_router(products.router, prefix="/api")
 app.include_router(users.router, prefix="/api")
+app.include_router(orders.router, prefix="/api")
+app.include_router(admin.router, prefix="/api")
 
 @app.get("/api/health")
 def health_check():
