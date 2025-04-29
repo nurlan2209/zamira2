@@ -1,14 +1,48 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import HomePage from "./components/HomePage";
 import CatalogPage from "./components/CatalogPage";
 import ProductPage from "./components/ProductPage";
 import PaymentPage from "./components/PaymentPage";
-import Modal from "./components/Modal"; // Импорт компонента Modal
+import Modal from "./components/Modal";
+import { isAuthenticated, getCurrentUser, logout } from "./services/auth";
 
 function App() {
   const [showModal, setShowModal] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Получаем данные пользователя при загрузке приложения
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (isAuthenticated()) {
+        try {
+          const userData = await getCurrentUser();
+          setUser(userData);
+        } catch (error) {
+          console.error("Ошибка при получении данных пользователя:", error);
+          logout(); // Если токен невалидный, выходим из системы
+        }
+      }
+      setLoading(false);
+    };
+
+    fetchUser();
+
+    // Обработчик события для открытия модального окна
+    const handleOpenModal = (event) => {
+      const { isLogin } = event.detail;
+      setIsLogin(isLogin);
+      setShowModal(true);
+    };
+
+    document.addEventListener("openModal", handleOpenModal);
+
+    return () => {
+      document.removeEventListener("openModal", handleOpenModal);
+    };
+  }, []);
 
   const openModal = (isLoginForm) => {
     setIsLogin(isLoginForm);
@@ -19,32 +53,60 @@ function App() {
     setShowModal(false);
   };
 
-  const handleSubmit = async (formData, isLoginForm) => {
-    // Здесь можно отправить данные на сервер для регистрации или входа
-    const endpoint = isLoginForm ? "/login" : "/register";
-    const response = await fetch(`http://localhost:5000${endpoint}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(formData),
-    });
-
-    if (response.ok) {
-      // Логика после успешной регистрации/входа
-      console.log("Success");
-    } else {
-      console.error("Error");
-    }
+  const handleLogout = () => {
+    logout();
+    setUser(null);
+    window.location.href = "/"; // Перенаправляем на главную страницу
   };
+
+  // Если данные пользователя еще загружаются, можно показать спиннер или заглушку
+  if (loading) {
+    return <div>Загрузка...</div>;
+  }
 
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<HomePage openModal={openModal} />} />
-        <Route path="/catalog" element={<CatalogPage />} />
-        <Route path="/product/:id" element={<ProductPage />} />
-        <Route path="/payment" element={<PaymentPage />} />
+        <Route 
+          path="/" 
+          element={
+            <HomePage 
+              openModal={openModal} 
+              user={user} 
+              onLogout={handleLogout} 
+            />
+          } 
+        />
+        <Route 
+          path="/catalog" 
+          element={
+            <CatalogPage 
+              user={user} 
+              openModal={openModal} 
+              onLogout={handleLogout} 
+            />
+          } 
+        />
+        <Route 
+          path="/product/:id" 
+          element={
+            <ProductPage 
+              user={user} 
+              openModal={openModal} 
+              onLogout={handleLogout} 
+            />
+          } 
+        />
+        <Route 
+          path="/payment" 
+          element={
+            <PaymentPage 
+              user={user} 
+              openModal={openModal} 
+              onLogout={handleLogout} 
+            />
+          } 
+        />
       </Routes>
 
       {/* Модальное окно для регистрации/входа */}
@@ -52,7 +114,6 @@ function App() {
         show={showModal}
         closeModal={closeModal}
         isLogin={isLogin}
-        handleSubmit={handleSubmit}
       />
     </Router>
   );
