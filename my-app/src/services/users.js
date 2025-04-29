@@ -34,18 +34,38 @@ export const updateUserProfile = async (userData) => {
       throw new Error("Требуется авторизация");
     }
 
+    console.log("Отправка запроса на обновление профиля:", userData);
+
     const response = await fetch(`${API_URL}/users/me`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
+        "Accept": "application/json"
       },
+      credentials: "include", // Включаем отправку куки
       body: JSON.stringify(userData),
     });
 
+    console.log("Статус ответа:", response.status);
+    
+    // Для отладки - выводим заголовки ответа
+    const headers = {};
+    response.headers.forEach((value, key) => {
+      headers[key] = value;
+    });
+    console.log("Заголовки ответа:", headers);
+
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.detail || "Ошибка при обновлении профиля");
+      let errorMessage = "Ошибка при обновлении профиля";
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.detail || errorMessage;
+      } catch (e) {
+        // Если не получилось распарсить JSON, используем текст ответа
+        errorMessage = await response.text() || errorMessage;
+      }
+      throw new Error(errorMessage);
     }
 
     return await response.json();
@@ -87,7 +107,7 @@ export const changePassword = async (currentPassword, newPassword) => {
   }
 };
 
-// Функция для получения списка адресов пользователя
+// Другие функции остаются без изменений
 export const getUserAddresses = async () => {
   try {
     const token = localStorage.getItem("token");
@@ -112,7 +132,6 @@ export const getUserAddresses = async () => {
   }
 };
 
-// Функция для добавления нового адреса
 export const addUserAddress = async (addressData) => {
   try {
     const token = localStorage.getItem("token");
@@ -141,7 +160,6 @@ export const addUserAddress = async (addressData) => {
   }
 };
 
-// Функция для удаления адреса
 export const deleteUserAddress = async (addressId) => {
   try {
     const token = localStorage.getItem("token");

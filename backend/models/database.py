@@ -12,10 +12,18 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)
+    is_admin = Column(Boolean, default=False)  # Флаг администратора
+    
+    # Новые поля для профиля пользователя
+    first_name = Column(String, nullable=True)
+    last_name = Column(String, nullable=True)
+    address = Column(String, nullable=True)
+    phone = Column(String, nullable=True)
     
     # Связь с заказами
     orders = relationship("Order", back_populates="user")
 
+# Остальные модели остаются без изменений
 # Модель категории товаров
 class Category(Base):
     __tablename__ = "categories"

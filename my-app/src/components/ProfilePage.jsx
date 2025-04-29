@@ -31,11 +31,13 @@ export default function ProfilePage({ user, onLogout, openModal }) {
 
     // Инициализируем данные формы из данных пользователя
     setEditedUser({
-      username: user.username,
-      email: user.email,
+      username: user.username || "",
+      email: user.email || "",
       address: user.address || "",
       phone: user.phone || ""
     });
+
+    console.log("Данные пользователя загружены:", user);
 
     // Загружаем заказы пользователя
     if (activeTab === "orders") {
@@ -60,15 +62,17 @@ export default function ProfilePage({ user, onLogout, openModal }) {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setEditedUser({ ...editedUser, [name]: value });
+    console.log("Изменено поле:", name, "новое значение:", value);
   };
 
   const toggleEditMode = () => {
     setEditMode(!editMode);
+    setError(null);
     // Сбрасываем изменения, если выходим из режима редактирования
     if (editMode) {
       setEditedUser({
-        username: user.username,
-        email: user.email,
+        username: user.username || "",
+        email: user.email || "",
         address: user.address || "",
         phone: user.phone || ""
       });
@@ -77,17 +81,41 @@ export default function ProfilePage({ user, onLogout, openModal }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
+    
     try {
       setLoading(true);
-      await updateUserProfile(editedUser);
+      console.log("Отправка данных профиля:", editedUser);
+      
+      // Подготовка данных - отправляем только измененные поля
+      const dataToSend = {};
+      if (editedUser.username !== (user.username || "")) dataToSend.username = editedUser.username;
+      if (editedUser.email !== (user.email || "")) dataToSend.email = editedUser.email;
+      if (editedUser.address !== (user.address || "")) dataToSend.address = editedUser.address;
+      if (editedUser.phone !== (user.phone || "")) dataToSend.phone = editedUser.phone;
+      
+      console.log("Отправка только измененных данных:", dataToSend);
+
+      // Проверяем, есть ли данные для отправки
+      if (Object.keys(dataToSend).length === 0) {
+        console.log("Нет измененных данных, закрываем режим редактирования");
+        setEditMode(false);
+        return;
+      }
+      
+      const updatedUser = await updateUserProfile(dataToSend);
+      console.log("Профиль успешно обновлен:", updatedUser);
+      
       setEditMode(false);
-      setError(null);
       
       // Обновляем пользователя (в реальном приложении нужно обновить состояние пользователя)
       alert("Профиль успешно обновлен!");
+      
+      // Здесь можно было бы обновить данные пользователя в родительском компоненте,
+      // например, через callback функцию
     } catch (err) {
-      setError("Не удалось обновить профиль. Пожалуйста, попробуйте позже.");
       console.error("Ошибка при обновлении профиля:", err);
+      setError(err.message || "Не удалось обновить профиль. Пожалуйста, попробуйте позже.");
     } finally {
       setLoading(false);
     }
@@ -95,6 +123,7 @@ export default function ProfilePage({ user, onLogout, openModal }) {
 
   const handleTabClick = (tab) => {
     setActiveTab(tab);
+    setError(null);
     if (tab === "orders") {
       fetchOrders();
     }

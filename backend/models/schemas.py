@@ -9,9 +9,25 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
 
+class UserUpdate(BaseModel):
+    username: Optional[str] = None
+    email: Optional[str] = None
+    address: Optional[str] = None
+    phone: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    
+    class Config:
+        orm_mode = True
+
 class User(UserBase):
     id: int
     is_active: bool
+    address: Optional[str] = None
+    phone: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    is_admin: Optional[bool] = False
     
     class Config:
         orm_mode = True
@@ -24,6 +40,7 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     username: Optional[str] = None
 
+# Остальные схемы остаются без изменений
 # Схемы для категорий
 class CategoryBase(BaseModel):
     name: str

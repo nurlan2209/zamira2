@@ -20,8 +20,10 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],  # Явно указываем все методы
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=600,  # Время кеширования предварительных запросов в секундах
 )
 
 # Подключаем роутеры
